@@ -1,0 +1,43 @@
+server:
+  port: 8080
+  timeout: 30s
+  debug: true
+
+db:
+  driver: postgres
+  host: localhost
+  port: 5432
+  user: postgres
+  password: postgres
+  dbname: vdm2bank
+  sslmode: disable
+  max_open_conns: 50
+  max_idle_conns: 10
+  conn_max_lifetime: 5m
+  auto_migrate: true
+
+redis:
+  host: localhost
+  port: 6379
+  password: ""
+  db: 0
+
+jwt:
+  secret: "your-secret-key-here-change-in-production"
+  expiry: 24h
+
+oauth:
+  google:
+    client_id: "your-google-client-id"
+    client_secret: "your-google-client-secret"
+    redirect_url: "http://localhost:8080/auth/google/callback"
+
+logging:
+  level: debug
+  format: json
+
+security:
+  rate_limit:
+    enabled: true
+    requests: 100
+    duration: 1m
