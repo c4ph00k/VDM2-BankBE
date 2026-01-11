@@ -1,0 +1,11 @@
+generatorName: typescript-fetch
+outputDir: clients/ts
+inputSpec: api/dist/openapi.bundle.yaml
+additionalProperties:
+  npmName: "@vdm2-bank/sdk"
+  npmVersion: "1.0.0"
+  supportsES6: true
+  withInterfaces: true
+  useSingleRequestParameter: true
+  disallowAdditionalPropertiesIfNotPresent: false
+

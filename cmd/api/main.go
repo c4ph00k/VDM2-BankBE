@@ -26,6 +26,8 @@ import (
 	"VDM2-BankBE/internal/service"
 	"VDM2-BankBE/pkg/cache"
 	"VDM2-BankBE/pkg/oauth"
+	
+	_ "VDM2-BankBE/internal/model" // Import for Swagger documentation generation
 )
 
 // @title VDM2 Banking API

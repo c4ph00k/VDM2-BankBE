@@ -1,0 +1,601 @@
+openapi: 3.0.3
+info:
+  title: VDM2 Banking API
+  version: 1.0.0
+  description: |
+    Baseline OpenAPI spec extracted from the existing Gin router/handlers.
+    After this initial extraction, this OpenAPI contract becomes the source of truth.
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+servers:
+  - url: '{scheme}://{host}:{port}'
+    description: Configurable server URL (dev/staging/prod)
+    variables:
+      scheme:
+        default: http
+      host:
+        default: localhost
+      port:
+        default: '8080'
+tags:
+  - name: auth
+    description: Authentication and OAuth flows
+  - name: accounts
+    description: Account operations for the authenticated user
+  - name: transfers
+    description: Transfers for the authenticated user
+  - name: meta
+    description: Health/metrics/swagger endpoints
+paths:
+  /api/v1/auth/signup:
+    post:
+      tags:
+        - auth
+      operationId: authSignUp
+      summary: Register a new user
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SignUpRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /api/v1/auth/login:
+    post:
+      tags:
+        - auth
+      operationId: authLogin
+      summary: Login
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /api/v1/auth/google:
+    get:
+      tags:
+        - auth
+      operationId: authGoogle
+      summary: Start Google OAuth flow
+      description: Redirects the user-agent to Google and sets `oauth_state` cookie.
+      security: []
+      responses:
+        '307':
+          description: Temporary Redirect
+          headers:
+            Location:
+              schema:
+                type: string
+              description: Google OAuth authorization URL
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /api/v1/auth/google/callback:
+    get:
+      tags:
+        - auth
+      operationId: authGoogleCallback
+      summary: Handle Google OAuth callback
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/OAuthCodeParam'
+        - $ref: '#/components/parameters/OAuthStateParam'
+      responses:
+        '200':
+          description: HTML page that stores token in localStorage and redirects.
+          content:
+            text/html:
+              schema:
+                type: string
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /api/v1/accounts/balance:
+    get:
+      tags:
+        - accounts
+      operationId: accountsGetBalance
+      summary: Get account balance
+      security:
+        - BearerJWT: []
+        - BearerPASETO: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BalanceResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /api/v1/accounts/movements:
+    get:
+      tags:
+        - accounts
+      operationId: accountsListMovements
+      summary: List account movements (paginated)
+      security:
+        - BearerJWT: []
+        - BearerPASETO: []
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/LimitParam'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedMovementsResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    post:
+      tags:
+        - accounts
+      operationId: accountsCreateMovement
+      summary: Create account movement
+      security:
+        - BearerJWT: []
+        - BearerPASETO: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateMovementRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Movement'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /api/v1/transfers:
+    get:
+      tags:
+        - transfers
+      operationId: transfersList
+      summary: List transfers (paginated)
+      security:
+        - BearerJWT: []
+        - BearerPASETO: []
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/LimitParam'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedTransfersResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    post:
+      tags:
+        - transfers
+      operationId: transfersCreate
+      summary: Create a transfer
+      security:
+        - BearerJWT: []
+        - BearerPASETO: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransferRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Transfer'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /health:
+    get:
+      tags:
+        - meta
+      operationId: healthCheck
+      summary: Health check
+      security: []
+      responses:
+        '200':
+          description: OK
+  /metrics:
+    get:
+      tags:
+        - meta
+      operationId: metrics
+      summary: Prometheus metrics
+      security: []
+      responses:
+        '200':
+          description: OK
+          content:
+            text/plain:
+              schema:
+                type: string
+components:
+  schemas:
+    SignUpRequest:
+      type: object
+      required:
+        - email
+        - password
+        - username
+        - first_name
+        - last_name
+        - fiscal_code
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 8
+        username:
+          type: string
+          minLength: 3
+        first_name:
+          type: string
+        last_name:
+          type: string
+        fiscal_code:
+          type: string
+    UUID:
+      type: string
+      format: uuid
+    DateTime:
+      type: string
+      format: date-time
+    User:
+      type: object
+      required:
+        - id
+        - email
+        - username
+        - first_name
+        - last_name
+        - fiscal_code
+        - created_at
+        - updated_at
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        email:
+          type: string
+          format: email
+        username:
+          type: string
+        first_name:
+          type: string
+        last_name:
+          type: string
+        fiscal_code:
+          type: string
+        created_at:
+          $ref: '#/components/schemas/DateTime'
+        updated_at:
+          $ref: '#/components/schemas/DateTime'
+    APIError:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: integer
+          format: int32
+          example: 400
+        message:
+          type: string
+          example: invalid request body
+    ErrorResponse:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          $ref: '#/components/schemas/APIError'
+      description: |
+        Current error envelope from `internal/util/errors.go`.
+        Note: for non-*util.APIError errors, the server responds with code=500 and message="internal server error".
+    LoginRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+    AuthResponse:
+      type: object
+      required:
+        - token
+        - expires_in
+      properties:
+        token:
+          type: string
+          description: JWT access token
+        expires_in:
+          type: integer
+          format: int32
+          description: Token TTL in seconds (handler currently hard-codes 3600)
+          example: 3600
+    BalanceResponse:
+      type: object
+      required:
+        - account_id
+        - balance
+        - currency
+      properties:
+        account_id:
+          $ref: '#/components/schemas/UUID'
+        balance:
+          type: string
+          description: Balance formatted as string (decimal.Decimal.String()).
+          example: '100.00'
+        currency:
+          type: string
+          example: EUR
+    DecimalString:
+      type: string
+      description: Decimal encoded as string (shopspring/decimal)
+      example: '12.34'
+    Movement:
+      type: object
+      required:
+        - id
+        - account_id
+        - amount
+        - type
+        - description
+        - occurred_at
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 1
+        account_id:
+          $ref: '#/components/schemas/UUID'
+        amount:
+          $ref: '#/components/schemas/DecimalString'
+        type:
+          type: string
+          enum:
+            - credit
+            - debit
+        description:
+          type: string
+        occurred_at:
+          $ref: '#/components/schemas/DateTime'
+      description: |
+        Mirrors `internal/model.Movement` JSON.
+        NOTE: in Go it serializes `amount` as decimal (shopspring/decimal) which is typically a JSON string/number depending on config.
+        TODO: confirm runtime JSON encoding for decimal.Decimal and adjust if needed.
+    PaginationMeta:
+      type: object
+      required:
+        - current_page
+        - total_pages
+        - total_items
+        - per_page
+      properties:
+        current_page:
+          type: integer
+          format: int32
+        total_pages:
+          type: integer
+          format: int32
+        total_items:
+          type: integer
+          format: int32
+        per_page:
+          type: integer
+          format: int32
+    PaginatedMovementsResponse:
+      type: object
+      required:
+        - data
+        - pagination
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Movement'
+        pagination:
+          $ref: '#/components/schemas/PaginationMeta'
+      description: |
+        Concrete shape of `util.PaginatedResponse` as returned by `MovementService.GetByAccountID()`.
+    CreateMovementRequest:
+      type: object
+      required:
+        - amount
+        - type
+      properties:
+        amount:
+          $ref: '#/components/schemas/DecimalString'
+        type:
+          type: string
+          enum:
+            - credit
+            - debit
+        description:
+          type: string
+    Transfer:
+      type: object
+      required:
+        - id
+        - from_account
+        - to_account
+        - amount
+        - status
+        - initiated_at
+        - completed_at
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 1
+        from_account:
+          $ref: '#/components/schemas/UUID'
+        to_account:
+          $ref: '#/components/schemas/UUID'
+        amount:
+          $ref: '#/components/schemas/DecimalString'
+        status:
+          type: string
+          enum:
+            - pending
+            - completed
+            - failed
+        initiated_at:
+          $ref: '#/components/schemas/DateTime'
+        completed_at:
+          type: string
+          format: date-time
+          nullable: true
+    PaginatedTransfersResponse:
+      type: object
+      required:
+        - data
+        - pagination
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Transfer'
+        pagination:
+          $ref: '#/components/schemas/PaginationMeta'
+      description: |
+        Concrete shape of `util.PaginatedResponse` as returned by `TransferService.GetByAccountID()`.
+    TransferRequest:
+      type: object
+      required:
+        - to_account
+        - amount
+      properties:
+        to_account:
+          $ref: '#/components/schemas/UUID'
+        amount:
+          $ref: '#/components/schemas/DecimalString'
+        description:
+          type: string
+  responses:
+    BadRequestError:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    InternalServerError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    UnauthorizedError:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+  parameters:
+    OAuthCodeParam:
+      name: code
+      in: query
+      required: true
+      schema:
+        type: string
+      description: OAuth code
+    OAuthStateParam:
+      name: state
+      in: query
+      required: true
+      schema:
+        type: string
+      description: CSRF state
+    PageParam:
+      name: page
+      in: query
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+      description: 'Page number (default: 1)'
+    LimitParam:
+      name: limit
+      in: query
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 10
+      description: 'Items per page (default: 10, max: 100)'
+  securitySchemes:
+    BearerJWT:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        Current implementation: HS256 JWT verified in `internal/service/auth_service.go` via `jwt.ParseWithClaims`,
+        and enforced by Gin middleware `internal/middleware/auth_middleware.go`.
+    BearerPASETO:
+      type: http
+      scheme: bearer
+      bearerFormat: PASETO
+      description: |
+        Implemented: server accepts PASETO v2.local tokens and validates them in `internal/service/auth_service.go`
+        (key derived from `paseto.secret` or `jwt.secret` via SHA-256).
+        NOTE: the server still *issues* JWT tokens today; PASETO issuance is not exposed via existing endpoints.

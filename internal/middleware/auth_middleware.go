@@ -7,6 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 
+	"VDM2-BankBE/internal/generated"
 	"VDM2-BankBE/internal/service"
 	"VDM2-BankBE/internal/util"
 )
@@ -50,6 +51,47 @@ func (m *AuthMiddleware) Authenticate() gin.HandlerFunc {
 		// Add user to context
 		c.Set("user", user)
 		c.Next()
+	}
+}
+
+// AuthenticateIfRequiredFunc enforces bearer auth only for operations that declare security in OpenAPI.
+//
+// IMPORTANT: This is intended for `oapi-codegen` generated HandlerMiddlewares (NOT Gin's normal middleware chain),
+// so it must NOT call c.Next().
+//
+// It uses `internal/generated` operation scope markers that are set by the generated wrapper
+// BEFORE calling HandlerMiddlewares.
+func (m *AuthMiddleware) AuthenticateIfRequiredFunc() func(c *gin.Context) {
+	return func(c *gin.Context) {
+		_, hasJWT := c.Get(generated.BearerJWTScopes)
+		_, hasPASETO := c.Get(generated.BearerPASETOScopes)
+		if !hasJWT && !hasPASETO {
+			// Public operation
+			return
+		}
+
+		// Extract token from Authorization header
+		token := extractToken(c.Request)
+		if token == "" {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, util.ErrorResponse{
+				Error: util.NewUnauthorizedError("missing authorization token"),
+			})
+			return
+		}
+
+		// Verify token (JWT or PASETO) and get user
+		user, err := m.authService.VerifyToken(c, token)
+		if err != nil {
+			m.logger.Error("failed to verify token", zap.Error(err))
+			c.AbortWithStatusJSON(http.StatusUnauthorized, util.ErrorResponse{
+				Error: util.NewUnauthorizedError("invalid or expired token"),
+			})
+			return
+		}
+
+		// Add user to context
+		c.Set("user", user)
+		return
 	}
 }
 

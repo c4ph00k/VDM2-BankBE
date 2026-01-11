@@ -1,0 +1,19 @@
+apis:
+  vdm2:
+    root: api/src/openapi.yaml
+
+extends:
+  - recommended
+
+rules:
+  operation-operationId: error
+  operation-tag-defined: error
+  no-unused-components: warn
+  # We use a Redocly-friendly multi-file structure where `paths:` and `components:`
+  # are composed via `$ref` at object boundaries.
+  spec-strict-refs: off
+  # These are style warnings that don't reflect server reality for some endpoints
+  # (e.g., /health has no 4xx by design; /auth/google is a redirect).
+  operation-2xx-response: off
+  operation-4xx-response: off
+

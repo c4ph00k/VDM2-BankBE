@@ -1,0 +1,89 @@
+AuthSignUp:
+  post:
+    tags: [auth]
+    operationId: authSignUp
+    summary: Register a new user
+    security: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: ../components/schemas.yaml#/SignUpRequest
+    responses:
+      "201":
+        description: Created
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/User
+      "400":
+        $ref: ../components/responses.yaml#/BadRequestError
+      "500":
+        $ref: ../components/responses.yaml#/InternalServerError
+
+AuthLogin:
+  post:
+    tags: [auth]
+    operationId: authLogin
+    summary: Login
+    security: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: ../components/schemas.yaml#/LoginRequest
+    responses:
+      "200":
+        description: OK
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/AuthResponse
+      "400":
+        $ref: ../components/responses.yaml#/BadRequestError
+      "401":
+        $ref: ../components/responses.yaml#/UnauthorizedError
+      "500":
+        $ref: ../components/responses.yaml#/InternalServerError
+
+AuthGoogle:
+  get:
+    tags: [auth]
+    operationId: authGoogle
+    summary: Start Google OAuth flow
+    description: Redirects the user-agent to Google and sets `oauth_state` cookie.
+    security: []
+    responses:
+      "307":
+        description: Temporary Redirect
+        headers:
+          Location:
+            schema:
+              type: string
+            description: Google OAuth authorization URL
+      "500":
+        $ref: ../components/responses.yaml#/InternalServerError
+
+AuthGoogleCallback:
+  get:
+    tags: [auth]
+    operationId: authGoogleCallback
+    summary: Handle Google OAuth callback
+    security: []
+    parameters:
+      - $ref: ../components/parameters.yaml#/OAuthCodeParam
+      - $ref: ../components/parameters.yaml#/OAuthStateParam
+    responses:
+      "200":
+        description: HTML page that stores token in localStorage and redirects.
+        content:
+          text/html:
+            schema:
+              type: string
+      "400":
+        $ref: ../components/responses.yaml#/BadRequestError
+      "500":
+        $ref: ../components/responses.yaml#/InternalServerError
+

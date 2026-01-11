@@ -10,19 +10,18 @@ import (
 
 	"VDM2-BankBE/internal/model"
 	"VDM2-BankBE/internal/repository"
-	"VDM2-BankBE/pkg/cache"
 )
 
 // DefaultAccountService implements AccountService
 type DefaultAccountService struct {
 	accountRepo repository.AccountRepository
-	redisClient *cache.RedisClient
+	redisClient CacheClient
 }
 
 // NewAccountService creates a new account service
 func NewAccountService(
 	accountRepo repository.AccountRepository,
-	redisClient *cache.RedisClient,
+	redisClient CacheClient,
 ) AccountService {
 	return &DefaultAccountService{
 		accountRepo: accountRepo,

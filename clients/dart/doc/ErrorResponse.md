@@ -1,0 +1,15 @@
+# vdm2_bank_sdk.model.ErrorResponse
+
+## Load the model package
+```dart
+import 'package:vdm2_bank_sdk/api.dart';
+```
+
+## Properties
+Name | Type | Description | Notes
+------------ | ------------- | ------------- | -------------
+**error** | [**APIError**](APIError.md) |  | 
+
+[[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
+
+

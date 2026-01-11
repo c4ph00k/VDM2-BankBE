@@ -1,0 +1,10 @@
+generatorName: swift5
+outputDir: clients/swift
+inputSpec: api/dist/openapi.bundle.yaml
+additionalProperties:
+  projectName: VDM2BankSDK
+  podName: VDM2BankSDK
+  podVersion: "1.0.0"
+  swiftPackagePath: clients/swift
+  responseAs: AsyncAwait
+

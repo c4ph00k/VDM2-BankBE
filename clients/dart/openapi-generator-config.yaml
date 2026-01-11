@@ -1,0 +1,13 @@
+generatorName: dart
+outputDir: clients/dart
+inputSpec: api/dist/openapi.bundle.yaml
+additionalProperties:
+  pubName: vdm2_bank_sdk
+  pubVersion: "1.0.0"
+  pubDescription: "VDM2 Bank API client SDK generated from OpenAPI."
+  nullableFields: true
+  useEnumExtension: true
+  legacyDiscriminatorBehavior: false
+  # Dio-based client support depends on generator version; if unavailable, the default client is generated.
+  # TODO: if supported, add: library: dio
+

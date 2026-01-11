@@ -11,6 +11,8 @@ import (
 )
 
 // UserRepository defines the interface for user repository operations
+//
+//go:generate mockgen -destination=./mocks/mock_user_repository.go -package=mocks VDM2-BankBE/internal/repository UserRepository
 type UserRepository interface {
 	Create(ctx context.Context, user *model.User) error
 	GetByID(ctx context.Context, id uuid.UUID) (*model.User, error)
@@ -21,6 +23,8 @@ type UserRepository interface {
 }
 
 // AccountRepository defines the interface for account repository operations
+//
+//go:generate mockgen -destination=./mocks/mock_account_repository.go -package=mocks VDM2-BankBE/internal/repository AccountRepository
 type AccountRepository interface {
 	Create(ctx context.Context, account *model.Account) error
 	GetByID(ctx context.Context, id uuid.UUID) (*model.Account, error)
@@ -30,6 +34,8 @@ type AccountRepository interface {
 }
 
 // MovementRepository defines the interface for movement repository operations
+//
+//go:generate mockgen -destination=./mocks/mock_movement_repository.go -package=mocks VDM2-BankBE/internal/repository MovementRepository
 type MovementRepository interface {
 	Create(ctx context.Context, movement *model.Movement) error
 	GetByID(ctx context.Context, id uint64) (*model.Movement, error)
@@ -37,6 +43,8 @@ type MovementRepository interface {
 }
 
 // OAuthTokenRepository defines the interface for OAuth token repository operations
+//
+//go:generate mockgen -destination=./mocks/mock_oauth_token_repository.go -package=mocks VDM2-BankBE/internal/repository OAuthTokenRepository
 type OAuthTokenRepository interface {
 	Create(ctx context.Context, token *model.OAuthToken) error
 	GetByUserID(ctx context.Context, userID uuid.UUID) (*model.OAuthToken, error)
@@ -45,6 +53,8 @@ type OAuthTokenRepository interface {
 }
 
 // TransferRepository defines the interface for transfer repository operations
+//
+//go:generate mockgen -destination=./mocks/mock_transfer_repository.go -package=mocks VDM2-BankBE/internal/repository TransferRepository
 type TransferRepository interface {
 	Create(ctx context.Context, transfer *model.Transfer) error
 	GetByID(ctx context.Context, id uint64) (*model.Transfer, error)

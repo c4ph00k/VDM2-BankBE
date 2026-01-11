@@ -1,0 +1,11 @@
+{
+  "name": "vdm2-bankbe-api-tooling",
+  "private": true,
+  "version": "1.0.0",
+  "description": "OpenAPI lint/bundle + SDK generation tooling",
+  "devDependencies": {
+    "@openapitools/openapi-generator-cli": "2.27.0",
+    "@redocly/cli": "2.14.3"
+  }
+}
+

@@ -1,0 +1,228 @@
+UUID:
+  type: string
+  format: uuid
+
+DecimalString:
+  type: string
+  description: Decimal encoded as string (shopspring/decimal)
+  example: "12.34"
+
+DateTime:
+  type: string
+  format: date-time
+
+APIError:
+  type: object
+  required: [code, message]
+  properties:
+    code:
+      type: integer
+      format: int32
+      example: 400
+    message:
+      type: string
+      example: invalid request body
+
+ErrorResponse:
+  type: object
+  required: [error]
+  properties:
+    error:
+      $ref: "#/APIError"
+  description: |
+    Current error envelope from `internal/util/errors.go`.
+    Note: for non-*util.APIError errors, the server responds with code=500 and message="internal server error".
+
+User:
+  type: object
+  required: [id, email, username, first_name, last_name, fiscal_code, created_at, updated_at]
+  properties:
+    id:
+      $ref: "#/UUID"
+    email:
+      type: string
+      format: email
+    username:
+      type: string
+    first_name:
+      type: string
+    last_name:
+      type: string
+    fiscal_code:
+      type: string
+    created_at:
+      $ref: "#/DateTime"
+    updated_at:
+      $ref: "#/DateTime"
+
+SignUpRequest:
+  type: object
+  required: [email, password, username, first_name, last_name, fiscal_code]
+  properties:
+    email:
+      type: string
+      format: email
+    password:
+      type: string
+      minLength: 8
+    username:
+      type: string
+      minLength: 3
+    first_name:
+      type: string
+    last_name:
+      type: string
+    fiscal_code:
+      type: string
+
+LoginRequest:
+  type: object
+  required: [email, password]
+  properties:
+    email:
+      type: string
+      format: email
+    password:
+      type: string
+
+AuthResponse:
+  type: object
+  required: [token, expires_in]
+  properties:
+    token:
+      type: string
+      description: JWT access token
+    expires_in:
+      type: integer
+      format: int32
+      description: Token TTL in seconds (handler currently hard-codes 3600)
+      example: 3600
+
+BalanceResponse:
+  type: object
+  required: [account_id, balance, currency]
+  properties:
+    account_id:
+      $ref: "#/UUID"
+    balance:
+      type: string
+      description: Balance formatted as string (decimal.Decimal.String()).
+      example: "100.00"
+    currency:
+      type: string
+      example: EUR
+
+CreateMovementRequest:
+  type: object
+  required: [amount, type]
+  properties:
+    amount:
+      $ref: "#/DecimalString"
+    type:
+      type: string
+      enum: [credit, debit]
+    description:
+      type: string
+
+Movement:
+  type: object
+  required: [id, account_id, amount, type, description, occurred_at]
+  properties:
+    id:
+      type: integer
+      format: int64
+      example: 1
+    account_id:
+      $ref: "#/UUID"
+    amount:
+      $ref: "#/DecimalString"
+    type:
+      type: string
+      enum: [credit, debit]
+    description:
+      type: string
+    occurred_at:
+      $ref: "#/DateTime"
+  description: |
+    Mirrors `internal/model.Movement` JSON.
+    NOTE: in Go it serializes `amount` as decimal (shopspring/decimal) which is typically a JSON string/number depending on config.
+    TODO: confirm runtime JSON encoding for decimal.Decimal and adjust if needed.
+
+TransferRequest:
+  type: object
+  required: [to_account, amount]
+  properties:
+    to_account:
+      $ref: "#/UUID"
+    amount:
+      $ref: "#/DecimalString"
+    description:
+      type: string
+
+Transfer:
+  type: object
+  required: [id, from_account, to_account, amount, status, initiated_at, completed_at]
+  properties:
+    id:
+      type: integer
+      format: int64
+      example: 1
+    from_account:
+      $ref: "#/UUID"
+    to_account:
+      $ref: "#/UUID"
+    amount:
+      $ref: "#/DecimalString"
+    status:
+      type: string
+      enum: [pending, completed, failed]
+    initiated_at:
+      $ref: "#/DateTime"
+    completed_at:
+      type: string
+      format: date-time
+      nullable: true
+
+PaginationMeta:
+  type: object
+  required: [current_page, total_pages, total_items, per_page]
+  properties:
+    current_page:
+      type: integer
+      format: int32
+    total_pages:
+      type: integer
+      format: int32
+    total_items:
+      type: integer
+      format: int32
+    per_page:
+      type: integer
+      format: int32
+
+PaginatedMovementsResponse:
+  type: object
+  required: [data, pagination]
+  properties:
+    data:
+      type: array
+      items:
+        $ref: "#/Movement"
+    pagination:
+      $ref: "#/PaginationMeta"
+  description: |
+    Concrete shape of `util.PaginatedResponse` as returned by `MovementService.GetByAccountID()`.
+
+PaginatedTransfersResponse:
+  type: object
+  required: [data, pagination]
+  properties:
+    data:
+      type: array
+      items:
+        $ref: "#/Transfer"
+    pagination:
+      $ref: "#/PaginationMeta"
+  description: |
+    Concrete shape of `util.PaginatedResponse` as returned by `TransferService.GetByAccountID()`.
+

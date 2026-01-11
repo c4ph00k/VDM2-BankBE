@@ -1,0 +1,13 @@
+generatorName: kotlin
+outputDir: clients/kotlin
+inputSpec: api/dist/openapi.bundle.yaml
+additionalProperties:
+  groupId: com.vdm2.bank
+  artifactId: vdm2-bank-sdk
+  artifactVersion: "1.0.0"
+  library: jvm-okhttp4
+  serializationLibrary: kotlinx_serialization
+  enumPropertyNaming: original
+  useCoroutines: true
+  dateLibrary: java8
+

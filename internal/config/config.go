@@ -15,6 +15,7 @@ type Config struct {
 	DB       DBConfig
 	Redis    RedisConfig
 	JWT      JWTConfig
+	PASETO   PASETOConfig
 	OAuth    OAuthConfig
 	Logging  LoggingConfig
 	Security SecurityConfig
@@ -54,6 +55,12 @@ type RedisConfig struct {
 type JWTConfig struct {
 	Secret string
 	Expiry time.Duration
+}
+
+// PASETOConfig holds PASETO configuration
+// NOTE: PASETO support is optional; if Secret is empty, the server derives a key from JWT.Secret.
+type PASETOConfig struct {
+	Secret string
 }
 
 // OAuthConfig holds OAuth configuration

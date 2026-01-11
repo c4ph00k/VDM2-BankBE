@@ -1,0 +1,38 @@
+openapi: 3.0.3
+info:
+  title: VDM2 Banking API
+  version: 1.0.0
+  description: |
+    Baseline OpenAPI spec extracted from the existing Gin router/handlers.
+    After this initial extraction, this OpenAPI contract becomes the source of truth.
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: "{scheme}://{host}:{port}"
+    description: Configurable server URL (dev/staging/prod)
+    variables:
+      scheme:
+        default: http
+      host:
+        default: localhost
+      port:
+        default: "8080"
+
+tags:
+  - name: auth
+    description: Authentication and OAuth flows
+  - name: accounts
+    description: Account operations for the authenticated user
+  - name: transfers
+    description: Transfers for the authenticated user
+  - name: meta
+    description: Health/metrics/swagger endpoints
+
+paths:
+  $ref: ./paths/index.yaml
+
+components:
+  $ref: ./components/index.yaml
+

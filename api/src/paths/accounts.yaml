@@ -1,0 +1,70 @@
+AccountsBalance:
+  get:
+    tags: [accounts]
+    operationId: accountsGetBalance
+    summary: Get account balance
+    security:
+      - BearerJWT: []
+      - BearerPASETO: []
+    responses:
+      "200":
+        description: OK
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/BalanceResponse
+      "401":
+        $ref: ../components/responses.yaml#/UnauthorizedError
+      "500":
+        $ref: ../components/responses.yaml#/InternalServerError
+
+AccountsMovements:
+  get:
+    tags: [accounts]
+    operationId: accountsListMovements
+    summary: List account movements (paginated)
+    security:
+      - BearerJWT: []
+      - BearerPASETO: []
+    parameters:
+      - $ref: ../components/parameters.yaml#/PageParam
+      - $ref: ../components/parameters.yaml#/LimitParam
+    responses:
+      "200":
+        description: OK
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/PaginatedMovementsResponse
+      "401":
+        $ref: ../components/responses.yaml#/UnauthorizedError
+      "500":
+        $ref: ../components/responses.yaml#/InternalServerError
+
+  post:
+    tags: [accounts]
+    operationId: accountsCreateMovement
+    summary: Create account movement
+    security:
+      - BearerJWT: []
+      - BearerPASETO: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: ../components/schemas.yaml#/CreateMovementRequest
+    responses:
+      "201":
+        description: Created
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/Movement
+      "400":
+        $ref: ../components/responses.yaml#/BadRequestError
+      "401":
+        $ref: ../components/responses.yaml#/UnauthorizedError
+      "500":
+        $ref: ../components/responses.yaml#/InternalServerError
+

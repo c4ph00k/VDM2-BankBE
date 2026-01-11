@@ -91,6 +91,61 @@ func (m *RateLimitMiddleware) LimitByUser() gin.HandlerFunc {
 	}
 }
 
+// LimitByUserFunc is the same as LimitByUser, but intended for `oapi-codegen` generated HandlerMiddlewares.
+// It must NOT call c.Next().
+func (m *RateLimitMiddleware) LimitByUserFunc() func(c *gin.Context) {
+	return func(c *gin.Context) {
+		// Skip if rate limiting is disabled
+		if !m.config.Enabled {
+			return
+		}
+
+		// Get user from context
+		user, exists := c.Get("user")
+		if !exists {
+			// If no user in context, let the request through
+			// The auth middleware will handle unauthorized requests
+			return
+		}
+
+		userModel, ok := user.(*model.User)
+		if !ok {
+			m.logger.Error("failed to get user from context")
+			return
+		}
+
+		// Get the route for more granular limiting
+		route := c.Request.Method + ":" + c.FullPath()
+
+		// Increment and check rate limit
+		count, err := m.redisClient.IncrRateLimit(c, userModel.ID.String(), route, m.config.Duration)
+		if err != nil {
+			m.logger.Error("failed to check rate limit", zap.Error(err))
+			// Continue serving the request on Redis error
+			return
+		}
+
+		// Check if over the limit
+		if count > int64(m.config.Requests) {
+			m.logger.Warn("rate limit exceeded",
+				zap.String("user_id", userModel.ID.String()),
+				zap.String("route", route),
+				zap.Int64("count", count),
+				zap.Int("limit", m.config.Requests),
+			)
+
+			// Return rate limit exceeded error
+			c.Header("Retry-After", "60")
+			c.AbortWithStatusJSON(http.StatusTooManyRequests, util.ErrorResponse{
+				Error: util.NewAPIError(http.StatusTooManyRequests, "rate limit exceeded"),
+			})
+			return
+		}
+
+		return
+	}
+}
+
 // LimitByIP limits requests per IP address
 func (m *RateLimitMiddleware) LimitByIP() gin.HandlerFunc {
 	return func(c *gin.Context) {

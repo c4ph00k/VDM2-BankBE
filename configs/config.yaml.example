@@ -26,6 +26,10 @@ jwt:
   secret: "your-secret-key-here-change-in-production"
   expiry: 24h
 
+paseto:
+  # Optional. If empty, key is derived from jwt.secret (SHA-256).
+  secret: ""
+
 oauth:
   google:
     client_id: "your-google-client-id"

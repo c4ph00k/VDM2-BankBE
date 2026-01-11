@@ -12,21 +12,20 @@ import (
 	"VDM2-BankBE/internal/model"
 	"VDM2-BankBE/internal/repository"
 	"VDM2-BankBE/internal/util"
-	"VDM2-BankBE/pkg/cache"
 )
 
 // DefaultMovementService implements MovementService
 type DefaultMovementService struct {
 	movementRepo repository.MovementRepository
 	accountRepo  repository.AccountRepository
-	redisClient  *cache.RedisClient
+	redisClient  CacheClient
 }
 
 // NewMovementService creates a new movement service
 func NewMovementService(
 	movementRepo repository.MovementRepository,
 	accountRepo repository.AccountRepository,
-	redisClient *cache.RedisClient,
+	redisClient CacheClient,
 ) MovementService {
 	return &DefaultMovementService{
 		movementRepo: movementRepo,

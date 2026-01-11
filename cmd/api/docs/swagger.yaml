@@ -1,0 +1,447 @@
+basePath: /api/v1
+definitions:
+  VDM2-BankBE_internal_model.Movement:
+    properties:
+      account_id:
+        type: string
+      amount:
+        type: number
+      description:
+        type: string
+      id:
+        type: integer
+      occurred_at:
+        type: string
+      type:
+        type: string
+    type: object
+  VDM2-BankBE_internal_model.Transfer:
+    properties:
+      amount:
+        type: number
+      completed_at:
+        type: string
+      from_account:
+        type: string
+      id:
+        type: integer
+      initiated_at:
+        type: string
+      status:
+        type: string
+      to_account:
+        type: string
+    type: object
+  VDM2-BankBE_internal_model.User:
+    properties:
+      created_at:
+        type: string
+      email:
+        type: string
+      first_name:
+        type: string
+      fiscal_code:
+        type: string
+      id:
+        type: string
+      last_name:
+        type: string
+      updated_at:
+        type: string
+      username:
+        type: string
+    type: object
+  VDM2-BankBE_internal_util.APIError:
+    properties:
+      code:
+        type: integer
+      message:
+        type: string
+    type: object
+  VDM2-BankBE_internal_util.ErrorResponse:
+    properties:
+      error:
+        $ref: '#/definitions/VDM2-BankBE_internal_util.APIError'
+    type: object
+  VDM2-BankBE_internal_util.PaginatedResponse:
+    properties:
+      data: {}
+      pagination:
+        properties:
+          current_page:
+            type: integer
+          per_page:
+            type: integer
+          total_items:
+            type: integer
+          total_pages:
+            type: integer
+        type: object
+    type: object
+  internal_handler.AuthResponse:
+    properties:
+      expires_in:
+        type: integer
+      token:
+        type: string
+    type: object
+  internal_handler.BalanceResponse:
+    properties:
+      account_id:
+        type: string
+      balance:
+        type: string
+      currency:
+        type: string
+    type: object
+  internal_handler.CreateMovementRequest:
+    properties:
+      amount:
+        type: string
+      description:
+        type: string
+      type:
+        enum:
+        - credit
+        - debit
+        type: string
+    required:
+    - amount
+    - type
+    type: object
+  internal_handler.LoginRequest:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  internal_handler.SignUpRequest:
+    properties:
+      email:
+        type: string
+      first_name:
+        type: string
+      fiscal_code:
+        type: string
+      last_name:
+        type: string
+      password:
+        minLength: 8
+        type: string
+      username:
+        minLength: 3
+        type: string
+    required:
+    - email
+    - first_name
+    - fiscal_code
+    - last_name
+    - password
+    - username
+    type: object
+  internal_handler.TransferRequest:
+    properties:
+      amount:
+        type: string
+      description:
+        type: string
+      to_account:
+        type: string
+    required:
+    - amount
+    - to_account
+    type: object
+info:
+  contact:
+    email: support@vdmsquare.com
+    name: API Support
+  description: A RESTful API for banking operations including authentication, account
+    management, and transfers
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+  title: VDM2 Banking API
+  version: "1.0"
+paths:
+  /accounts/balance:
+    get:
+      description: Get the current balance of the authenticated user's account
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_handler.BalanceResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/VDM2-BankBE_internal_util.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/VDM2-BankBE_internal_util.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get account balance
+      tags:
+      - accounts
+  /accounts/movements:
+    get:
+      description: Get a paginated list of account movements
+      parameters:
+      - description: 'Page number (default: 1)'
+        in: query
+        name: page
+        type: integer
+      - description: 'Items per page (default: 10, max: 100)'
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/VDM2-BankBE_internal_util.PaginatedResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/VDM2-BankBE_internal_util.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/VDM2-BankBE_internal_util.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: List account movements
+      tags:
+      - accounts
+    post:
+      consumes:
+      - application/json
+      description: Create a new movement (credit or debit) in the account
+      parameters:
+      - description: Movement details
+        in: body
+        name: movement
+        required: true
+        schema:
+          $ref: '#/definitions/internal_handler.CreateMovementRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/VDM2-BankBE_internal_model.Movement'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/VDM2-BankBE_internal_util.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/VDM2-BankBE_internal_util.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/VDM2-BankBE_internal_util.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Create account movement
+      tags:
+      - accounts
+  /auth/google:
+    get:
+      description: Redirect user to Google for authentication
+      produces:
+      - application/json
+      responses:
+        "307":
+          description: Redirects to Google
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/VDM2-BankBE_internal_util.ErrorResponse'
+      summary: Start Google OAuth flow
+      tags:
+      - auth
+  /auth/google/callback:
+    get:
+      description: Process OAuth callback and authenticate user
+      parameters:
+      - description: OAuth code
+        in: query
+        name: code
+        required: true
+        type: string
+      - description: CSRF state
+        in: query
+        name: state
+        required: true
+        type: string
+      produces:
+      - text/html
+      responses:
+        "200":
+          description: HTML with token
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/VDM2-BankBE_internal_util.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/VDM2-BankBE_internal_util.ErrorResponse'
+      summary: Handle Google OAuth callback
+      tags:
+      - auth
+  /auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Authenticate user and return a JWT token
+      parameters:
+      - description: Login credentials
+        in: body
+        name: credentials
+        required: true
+        schema:
+          $ref: '#/definitions/internal_handler.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_handler.AuthResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/VDM2-BankBE_internal_util.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/VDM2-BankBE_internal_util.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/VDM2-BankBE_internal_util.ErrorResponse'
+      summary: Login a user
+      tags:
+      - auth
+  /auth/signup:
+    post:
+      consumes:
+      - application/json
+      description: Create a new user account
+      parameters:
+      - description: User details
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/internal_handler.SignUpRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/VDM2-BankBE_internal_model.User'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/VDM2-BankBE_internal_util.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/VDM2-BankBE_internal_util.ErrorResponse'
+      summary: Register a new user
+      tags:
+      - auth
+  /transfers:
+    get:
+      description: Get a paginated list of transfers for the authenticated user's
+        account
+      parameters:
+      - description: 'Page number (default: 1)'
+        in: query
+        name: page
+        type: integer
+      - description: 'Items per page (default: 10, max: 100)'
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/VDM2-BankBE_internal_util.PaginatedResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/VDM2-BankBE_internal_util.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/VDM2-BankBE_internal_util.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: List transfers
+      tags:
+      - transfers
+    post:
+      consumes:
+      - application/json
+      description: Transfer funds from the authenticated user's account to another
+        account
+      parameters:
+      - description: Transfer details
+        in: body
+        name: transfer
+        required: true
+        schema:
+          $ref: '#/definitions/internal_handler.TransferRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/VDM2-BankBE_internal_model.Transfer'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/VDM2-BankBE_internal_util.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/VDM2-BankBE_internal_util.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/VDM2-BankBE_internal_util.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Create a transfer
+      tags:
+      - transfers
+securityDefinitions:
+  BearerAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

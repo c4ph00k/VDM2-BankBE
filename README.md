@@ -115,6 +115,58 @@ Base URL: `/api/v1`
 
 Detailed API documentation is available via Swagger at `/swagger/index.html`.
 
+## OpenAPI-first workflow (contract = reality)
+
+This repository now includes a **multi-file OpenAPI 3.0.x** contract extracted from the existing Gin router and handlers.
+
+- **Source of truth**: `api/src/openapi.yaml` (plus `api/src/paths/*` and `api/src/components/*`)
+- **Bundled artifact (generated)**: `api/dist/openapi.bundle.yaml`
+- **Generated Go server types + Gin interface (generated)**: `internal/generated/api.gen.go` (via `oapi-codegen`)
+- **Generated client SDKs (generated)**:
+  - TypeScript: `clients/ts`
+  - Kotlin: `clients/kotlin`
+  - Swift: `clients/swift`
+  - Dart/Flutter: `clients/dart`
+
+### How routes are discovered (baseline extraction)
+
+Baseline OpenAPI was derived from:
+
+- Gin routes: `internal/router/router.go`
+- Handler request/response shapes: `internal/handler/*.go`
+- Error envelope: `internal/util/errors.go`
+- Auth middleware behavior: `internal/middleware/auth_middleware.go`
+
+If behavior is unclear for a field/response, the spec contains **TODO** notes in `description` while keeping generation consistent.
+
+### Regenerate server + SDKs
+
+Prereqs:
+
+- Go 1.21+ (CI uses Go 1.22)
+- Node.js 20+ (for Redocly + openapi-generator wrapper)
+- Java 17+ (required by OpenAPI Generator)
+
+Run:
+
+```bash
+make generate
+```
+
+### Adding a new endpoint going forward (spec-first)
+
+1. Edit OpenAPI under `api/src/` (add/modify path + schemas).
+2. Run `make generate`.
+3. Implement the generated `generated.ServerInterface` (see `cmd/server/main.go` for minimal wiring).
+4. Keep CI green: the workflow expects generation to be deterministic and the working tree clean after `make generate`.
+
+### Authentication (JWT + PASETO in contract)
+
+- The OpenAPI contract documents two bearer schemes:
+  - `BearerJWT` (implemented today)
+  - `BearerPASETO` (**documented**, TODO to implement server-side validation)
+- Current production auth enforcement is JWT-only via `internal/middleware/auth_middleware.go`.
+
 ## Contributing
 
 1. Fork the repository

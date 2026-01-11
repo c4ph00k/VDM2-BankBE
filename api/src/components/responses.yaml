@@ -1,0 +1,21 @@
+BadRequestError:
+  description: Bad request
+  content:
+    application/json:
+      schema:
+        $ref: ./schemas.yaml#/ErrorResponse
+
+UnauthorizedError:
+  description: Unauthorized
+  content:
+    application/json:
+      schema:
+        $ref: ./schemas.yaml#/ErrorResponse
+
+InternalServerError:
+  description: Internal server error
+  content:
+    application/json:
+      schema:
+        $ref: ./schemas.yaml#/ErrorResponse
+

@@ -3,12 +3,14 @@ package service
 import (
 	"context"
 	"crypto/rand"
+	"crypto/sha256"
 	"encoding/hex"
 	"strings"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
+	"github.com/o1egl/paseto"
 	"github.com/pkg/errors"
 	"github.com/shopspring/decimal"
 	"golang.org/x/crypto/bcrypt"
@@ -17,8 +19,6 @@ import (
 	"VDM2-BankBE/internal/model"
 	"VDM2-BankBE/internal/repository"
 	"VDM2-BankBE/internal/util"
-	"VDM2-BankBE/pkg/cache"
-	"VDM2-BankBE/pkg/oauth"
 )
 
 // JWTClaims represents the claims in the JWT
@@ -27,13 +27,21 @@ type JWTClaims struct {
 	jwt.RegisteredClaims
 }
 
+// PasetoClaims is the minimal token payload we accept for PASETO v2.local tokens.
+// It mirrors JWTClaims at the semantic level.
+type PasetoClaims struct {
+	UserID string `json:"user_id"`
+	// Exp should be RFC3339 timestamp for simplicity.
+	Exp string `json:"exp,omitempty"`
+}
+
 // DefaultAuthService implements AuthService
 type DefaultAuthService struct {
 	userRepo       repository.UserRepository
 	accountRepo    repository.AccountRepository
 	oauthTokenRepo repository.OAuthTokenRepository
-	redisClient    *cache.RedisClient
-	googleOAuth    *oauth.GoogleOAuthClient
+	redisClient    CacheClient
+	googleOAuth    GoogleOAuthClient
 	config         *config.Config
 }
 
@@ -42,8 +50,8 @@ func NewAuthService(
 	userRepo repository.UserRepository,
 	accountRepo repository.AccountRepository,
 	oauthTokenRepo repository.OAuthTokenRepository,
-	redisClient *cache.RedisClient,
-	googleOAuth *oauth.GoogleOAuthClient,
+	redisClient CacheClient,
+	googleOAuth GoogleOAuthClient,
 	config *config.Config,
 ) AuthService {
 	return &DefaultAuthService{
@@ -258,8 +266,22 @@ func (s *DefaultAuthService) GoogleCallback(ctx context.Context, code, state str
 	return jwtToken, nil
 }
 
-// VerifyToken verifies a JWT token and returns the user
+// VerifyToken verifies a bearer token (JWT or PASETO) and returns the user.
+//
+// - JWT: HS256 with secret `config.JWT.Secret` (current behavior)
+// - PASETO: v2.local with symmetric key derived from config.PASETO.Secret (or JWT.Secret if empty)
 func (s *DefaultAuthService) VerifyToken(ctx context.Context, tokenString string) (*model.User, error) {
+	// Heuristic routing:
+	// - PASETO tokens typically start with "v2." / "v4."
+	// - JWT tokens typically contain 2 dots and do not start with v2./v4.
+	if strings.HasPrefix(tokenString, "v2.") || strings.HasPrefix(tokenString, "v4.") {
+		user, err := s.verifyPaseto(ctx, tokenString)
+		if err != nil {
+			return nil, err
+		}
+		return user, nil
+	}
+
 	// Parse the token
 	token, err := jwt.ParseWithClaims(tokenString, &JWTClaims{}, func(token *jwt.Token) (interface{}, error) {
 		// Make sure the token method is what we expect
@@ -300,6 +322,52 @@ func (s *DefaultAuthService) VerifyToken(ctx context.Context, tokenString string
 		return nil, errors.Wrap(err, "failed to get user from token")
 	}
 
+	return user, nil
+}
+
+func (s *DefaultAuthService) verifyPaseto(ctx context.Context, tokenString string) (*model.User, error) {
+	// Only support v2.local for now (symmetric key).
+	if !strings.HasPrefix(tokenString, "v2.local.") {
+		return nil, util.NewUnauthorizedError("unsupported paseto version")
+	}
+
+	// Derive a 32-byte key from config (SHA-256).
+	// If PASETO secret is empty, derive from JWT secret to remain config-backwards-compatible.
+	secret := s.config.PASETO.Secret
+	if secret == "" {
+		secret = s.config.JWT.Secret
+	}
+	key := sha256.Sum256([]byte(secret))
+
+	var claims PasetoClaims
+	v2 := paseto.NewV2()
+	if err := v2.Decrypt(tokenString, key[:], &claims, nil); err != nil {
+		return nil, util.NewUnauthorizedError("invalid token")
+	}
+
+	// Optional exp enforcement (RFC3339)
+	if claims.Exp != "" {
+		exp, err := time.Parse(time.RFC3339, claims.Exp)
+		if err != nil {
+			return nil, util.NewUnauthorizedError("invalid token")
+		}
+		if exp.Before(time.Now()) {
+			return nil, util.NewUnauthorizedError("token expired")
+		}
+	}
+
+	userID, err := uuid.Parse(claims.UserID)
+	if err != nil {
+		return nil, util.NewUnauthorizedError("invalid user ID in token")
+	}
+
+	user, err := s.userRepo.GetByID(ctx, userID)
+	if err != nil {
+		if _, ok := err.(*util.APIError); ok {
+			return nil, util.NewUnauthorizedError("user not found")
+		}
+		return nil, errors.Wrap(err, "failed to get user from token")
+	}
 	return user, nil
 }
 

@@ -4,3 +4,4 @@ CLAUDE.md
 # ignore test logs
 test_results.json
 test_results.logs
+node_modules

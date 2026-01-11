@@ -13,7 +13,6 @@ import (
 	"VDM2-BankBE/internal/model"
 	"VDM2-BankBE/internal/repository"
 	"VDM2-BankBE/internal/util"
-	"VDM2-BankBE/pkg/cache"
 )
 
 // DefaultTransferService implements TransferService
@@ -21,8 +20,8 @@ type DefaultTransferService struct {
 	transferRepo repository.TransferRepository
 	accountRepo  repository.AccountRepository
 	movementRepo repository.MovementRepository
-	redisClient  *cache.RedisClient
-	db           *gorm.DB // For transactions
+	redisClient  CacheClient
+	db           TxDB // For transactions
 }
 
 // NewTransferService creates a new transfer service
@@ -30,8 +29,8 @@ func NewTransferService(
 	transferRepo repository.TransferRepository,
 	accountRepo repository.AccountRepository,
 	movementRepo repository.MovementRepository,
-	redisClient *cache.RedisClient,
-	db *gorm.DB,
+	redisClient CacheClient,
+	db TxDB,
 ) TransferService {
 	return &DefaultTransferService{
 		transferRepo: transferRepo,

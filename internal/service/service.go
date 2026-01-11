@@ -11,6 +11,7 @@ import (
 )
 
 // AuthService defines methods for authentication
+//go:generate mockgen -destination=./mocks/mock_auth_service.go -package=mocks VDM2-BankBE/internal/service AuthService
 type AuthService interface {
 	SignUp(ctx context.Context, email, username, firstName, lastName, fiscalCode, password string) (*model.User, error)
 	Login(ctx context.Context, email, password string) (string, error)
@@ -20,6 +21,7 @@ type AuthService interface {
 }
 
 // AccountService defines methods for account operations
+//go:generate mockgen -destination=./mocks/mock_account_service.go -package=mocks VDM2-BankBE/internal/service AccountService
 type AccountService interface {
 	Create(ctx context.Context, userID uuid.UUID) (*model.Account, error)
 	GetByID(ctx context.Context, id uuid.UUID) (*model.Account, error)
@@ -28,6 +30,7 @@ type AccountService interface {
 }
 
 // MovementService defines methods for movement operations
+//go:generate mockgen -destination=./mocks/mock_movement_service.go -package=mocks VDM2-BankBE/internal/service MovementService
 type MovementService interface {
 	Create(ctx context.Context, accountID uuid.UUID, amount decimal.Decimal, movementType, description string) (*model.Movement, error)
 	GetByID(ctx context.Context, id uint64) (*model.Movement, error)
@@ -35,6 +38,7 @@ type MovementService interface {
 }
 
 // TransferService defines methods for transfer operations
+//go:generate mockgen -destination=./mocks/mock_transfer_service.go -package=mocks VDM2-BankBE/internal/service TransferService
 type TransferService interface {
 	Transfer(ctx context.Context, fromAccountID, toAccountID uuid.UUID, amount decimal.Decimal, description string) (*model.Transfer, error)
 	GetByID(ctx context.Context, id uint64) (*model.Transfer, error)

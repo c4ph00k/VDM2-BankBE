@@ -1,0 +1,17 @@
+BearerJWT:
+  type: http
+  scheme: bearer
+  bearerFormat: JWT
+  description: |
+    Current implementation: HS256 JWT verified in `internal/service/auth_service.go` via `jwt.ParseWithClaims`,
+    and enforced by Gin middleware `internal/middleware/auth_middleware.go`.
+
+BearerPASETO:
+  type: http
+  scheme: bearer
+  bearerFormat: PASETO
+  description: |
+    Implemented: server accepts PASETO v2.local tokens and validates them in `internal/service/auth_service.go`
+    (key derived from `paseto.secret` or `jwt.secret` via SHA-256).
+    NOTE: the server still *issues* JWT tokens today; PASETO issuance is not exposed via existing endpoints.
+

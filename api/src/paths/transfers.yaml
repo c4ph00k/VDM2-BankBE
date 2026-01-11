@@ -1,0 +1,50 @@
+Transfers:
+  get:
+    tags: [transfers]
+    operationId: transfersList
+    summary: List transfers (paginated)
+    security:
+      - BearerJWT: []
+      - BearerPASETO: []
+    parameters:
+      - $ref: ../components/parameters.yaml#/PageParam
+      - $ref: ../components/parameters.yaml#/LimitParam
+    responses:
+      "200":
+        description: OK
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/PaginatedTransfersResponse
+      "401":
+        $ref: ../components/responses.yaml#/UnauthorizedError
+      "500":
+        $ref: ../components/responses.yaml#/InternalServerError
+
+  post:
+    tags: [transfers]
+    operationId: transfersCreate
+    summary: Create a transfer
+    security:
+      - BearerJWT: []
+      - BearerPASETO: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: ../components/schemas.yaml#/TransferRequest
+    responses:
+      "201":
+        description: Created
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/Transfer
+      "400":
+        $ref: ../components/responses.yaml#/BadRequestError
+      "401":
+        $ref: ../components/responses.yaml#/UnauthorizedError
+      "500":
+        $ref: ../components/responses.yaml#/InternalServerError
+

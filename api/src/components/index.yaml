@@ -1,0 +1,9 @@
+schemas:
+  $ref: ./schemas.yaml
+responses:
+  $ref: ./responses.yaml
+parameters:
+  $ref: ./parameters.yaml
+securitySchemes:
+  $ref: ./security.yaml
+

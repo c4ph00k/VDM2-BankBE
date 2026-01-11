@@ -1,0 +1,24 @@
+Health:
+  get:
+    tags: [meta]
+    operationId: healthCheck
+    summary: Health check
+    security: []
+    responses:
+      "200":
+        description: OK
+
+Metrics:
+  get:
+    tags: [meta]
+    operationId: metrics
+    summary: Prometheus metrics
+    security: []
+    responses:
+      "200":
+        description: OK
+        content:
+          text/plain:
+            schema:
+              type: string
+
