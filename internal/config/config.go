@@ -108,6 +108,31 @@ func Load() (*Config, error) {
 	viper.SetDefault("server.timeout", "30s")
 	viper.SetDefault("server.debug", true)
 
+	// Enable environment variable support
+	viper.AutomaticEnv()
+
+	// Bind environment variables to config keys
+	// Server
+	viper.BindEnv("server.port", "SERVER_PORT")
+
+	// Database
+	viper.BindEnv("db.host", "DB_HOST")
+	viper.BindEnv("db.port", "DB_PORT")
+	viper.BindEnv("db.user", "DB_USER")
+	viper.BindEnv("db.password", "DB_PASSWORD")
+	viper.BindEnv("db.dbname", "DB_NAME")
+	viper.BindEnv("db.sslmode", "DB_SSLMODE")
+
+	// Redis
+	viper.BindEnv("redis.host", "REDIS_HOST")
+	viper.BindEnv("redis.port", "REDIS_PORT")
+	viper.BindEnv("redis.password", "REDIS_PASSWORD")
+	viper.BindEnv("redis.db", "REDIS_DB")
+
+	// JWT
+	viper.BindEnv("jwt.secret", "JWT_SECRET")
+	viper.BindEnv("jwt.expiry", "JWT_EXPIRY")
+
 	// Read the config
 	if err := viper.ReadInConfig(); err != nil {
 		return nil, errors.Wrap(err, "failed to read config file")

@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/gin-contrib/cors"
 	ginzap "github.com/gin-contrib/zap"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -51,6 +52,19 @@ func NewRouter(
 
 // Setup sets up the routes with Gin
 func (r *Router) Setup() http.Handler {
+	// Configure CORS middleware - allow all origins for development
+	r.engine.Use(cors.New(cors.Config{
+		AllowOriginFunc: func(origin string) bool {
+			// Allow all localhost and 127.0.0.1 origins in development
+			return true // TODO: Restrict this in production!
+		},
+		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization"},
+		ExposeHeaders:    []string{"Content-Length"},
+		AllowCredentials: true,
+		MaxAge:           12 * time.Hour,
+	}))
+
 	// Use Gin's zap logger and recovery middleware
 	r.engine.Use(ginzap.Ginzap(r.logger, time.RFC3339, true))
 	r.engine.Use(middleware.NewLoggingMiddleware(r.logger).LogRequest())
